@@ -1,36 +1,36 @@
 import express from "express";
-import dotenv from "dotenv";
-import db from "./database/db.js"
-import adminRouter from "./routes/adminRoutes.js"
-import userRouter from "./routes/userRouter.js"
+import config from "./src/config/serverConfig.js";
 import cookieParser from "cookie-parser";
-import cors from "cors"
-import { sendMail } from "./controllers/sendMail.js";
-dotenv.config();
-
+import cors from "cors";
+// import { sendMail } from "./src/controllers/sendMail.js";
+import path from "path";
+import logger from "morgan";
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 const app = express();
-
-app.use(cors());
-db.connectDB();
-app.use(express.json());
-app.use(express.urlencoded({extended:true}));
+const __dirname = dirname(fileURLToPath(import.meta.url));
+app.use(
+  cors({
+    origin: config.ORIGIN,
+    credentials: true,
+  })
+);
+app.use(logger("dev"));
+app.use(express.json({ limit: "16kb" }));
+app.use(express.urlencoded({ extended: true, limit: "16kb" }));
+app.use(express.static(path.join(__dirname, "public")));
 app.use(cookieParser());
 
-const port = process.env.PORT;
+// routes
 
-// admin routes
-//app.use("/api/admin",adminRouter);
-
+import userRouter from "./src/routes/v1/user.routes.js";
 
 // user routes
-app.use("/api/users",userRouter)
+app.use("/api/v1/users", userRouter);
 
 // admin routes
-app.use("/api/admin",adminRouter);
+// app.use("/api/v1/admin", adminRouter);
 
-app.listen(port, ()=> {
-    console.log(`Server is listening on port: ${port}`)
-})
-
-
-
+app.listen(config.PORT, () => {
+  console.log(`Server is listening on port: ${config.PORT}`);
+});
