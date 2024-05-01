@@ -24,10 +24,10 @@ app.use(cookieParser());
 // routes
 
 import userRouter from "./src/routes/v1/user.routes.js";
-
+import adminRouter from "./src/routes/v1/admin.routes.js";
 // user routes
 app.use("/api/v1/users", userRouter);
-
+app.use("/api/v1/admin", adminRouter);
 // admin routes
 // app.use("/api/v1/admin", adminRouter);
 

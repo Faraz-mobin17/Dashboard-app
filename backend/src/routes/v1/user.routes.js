@@ -1,7 +1,7 @@
 import express from "express";
 import { verifyJWT } from "../../middlewares/JWTauth.middleware.js";
 import {
-  getAllUsers,
+  // getAllUsers,
   registerUser,
   loginUser,
   logoutUser,
@@ -18,7 +18,7 @@ import {
 const router = express.Router();
 
 // GET all users
-router.get("/", getAllUsers);
+router.get("/:id", getUser);
 
 // Register user
 router.post("/register", validateSignup, registerUser);
@@ -27,12 +27,11 @@ router.post("/register", validateSignup, registerUser);
 router.post("/login", validateSignin, loginUser);
 
 // Logout user
-router.post("/logout", verifyJWT, logoutUser);
+router.post("/logout", logoutUser);
 
 // Routes for specific user by ID
 router
   .route("/:id")
-  .get(verifyJWT, getUser)
   .patch(verifyJWT, validateUpdateQuery, updateUser)
   .delete(verifyJWT, deleteUser);
 

@@ -1,12 +1,14 @@
-import './App.css'
-import Home from './components/Home'
-import Layout from './Layout'
-import React from 'react'
+import Home from "./pages/Home";
+import Layout from "./Layout/Layout";
+import React from "react";
 
-import { Route, RouterProvider, createBrowserRouter, createRoutesFromElements} from "react-router-dom"
+import {
+  Route,
+  RouterProvider,
+  createBrowserRouter,
+  createRoutesFromElements,
+} from "react-router-dom";
 function App() {
-
-
   // const router = createBrowserRouter([
   //     {
   //       path: '/',
@@ -28,11 +30,7 @@ function App() {
   //     }
   //   ])
 
-  return (
-   <>
-
-   </>
-  )
+  return <></>;
 }
 
-export default App
+export default App;

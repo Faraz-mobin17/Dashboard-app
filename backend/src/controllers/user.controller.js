@@ -3,8 +3,8 @@ import { ApiResponse } from "../utils/ApiResponse.utils.js";
 import { ApiError } from "../utils/ApiError.utils.js";
 import { asyncHandler } from "../utils/asyncHandler.utils.js";
 import AuthService from "../middlewares/AuthService.middleware.js";
-import { UserService } from "../services/user.service.js";
-import { UserRepository } from "../repositories/user.repository.js";
+import { UserService } from "../services/User/user.service.js";
+import { UserRepository } from "../repositories/User/user.repository.js";
 import db from "../database/db.js"; // Import your Database class instance
 
 // Modify the instantiation of UserService to use the Database instanc
@@ -49,15 +49,15 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 //============================ getAllUser Api =============================================
 
-const getAllUsers = asyncHandler(async (_, res) => {
-  const user = await User.getAllUsers();
-  if (!user || user.length === 0) {
-    throw new ApiError(HttpStatusCodes.NOT_FOUND, "User not found");
-  }
-  return res
-    .status(HttpStatusCodes.OK)
-    .json(new ApiResponse(HttpStatusCodes.OK, user));
-});
+// const getAllUsers = asyncHandler(async (_, res) => {
+//   const user = await User.getAllUsers();
+//   if (!user || user.length === 0) {
+//     throw new ApiError(HttpStatusCodes.NOT_FOUND, "User not found");
+//   }
+//   return res
+//     .status(HttpStatusCodes.OK)
+//     .json(new ApiResponse(HttpStatusCodes.OK, user));
+// });
 
 const getUser = asyncHandler(async (req, res) => {
   const userId = Number(req.params.id) || 1;
@@ -161,11 +161,11 @@ const logoutUser = asyncHandler(async (_, res) => {
   return res
     .status(HttpStatusCodes.OK)
     .clearCookie("token", options)
-    .json({ msg: "User logged out" });
+    .json({ message: "User logged out", success: true });
 });
 
 export {
-  getAllUsers,
+  // getAllUsers,
   getUser,
   updateUser,
   deleteUser,

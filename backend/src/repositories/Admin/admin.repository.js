@@ -1,21 +1,18 @@
-import { ApiError } from "../utils/ApiError.utils.js";
-import HttpStatusCodes from "../utils/httpStatusCodes.utils.js";
-
-class UserRepository {
+class AdminRepository {
   constructor(db) {
     this.db = db;
   }
 
-  async getAllUsers() {
+  async getAllUsersByAdmin() {
     try {
-      const query = `SELECT * FROM USERS`;
+      const query = `SELECT * FROM USERS where is_Admin <> 1`;
       return await this.db.executeQuery(query);
     } catch (error) {
       throw error;
     }
   }
 
-  async getUser(id) {
+  async getUserByAdmin(id) {
     try {
       const query = `SELECT * FROM USERS WHERE id = ?`;
       return await this.db.executeQuery(query, [id]);
@@ -24,16 +21,17 @@ class UserRepository {
     }
   }
 
-  async checkUserExists(email) {
+  async checkAdminExists(email) {
     try {
       console.log("checkUserExists fn", email);
-      const query = `SELECT * FROM users WHERE email = ?`;
+      const query = `SELECT * FROM admin WHERE email = ?`;
 
       const response = await this.db.executeQuery(query, [email]);
-      console.log("Inside user repo check User exists", response[0]);
+      console.log("Inside admin repo check User exists", response[0]);
       // Ensure that response is an array and has at least one element
       if (Array.isArray(response) && response.length > 0) {
-        return response[0];
+        console.log("inside if block of check admin exists fn");
+        return this.loginAdmin(email, response[0].password);
       }
       return false;
     } catch (error) {
@@ -42,7 +40,7 @@ class UserRepository {
     }
   }
 
-  async updateUser(params = {}, id) {
+  async updateUserByAdmin(params = {}, id) {
     const columnsToUpdate = Object.keys(params)
       .map((key) => `${key} = ?`)
       .join(", ");
@@ -62,7 +60,7 @@ class UserRepository {
     }
   }
 
-  async deleteUser(id) {
+  async deleteUserByAdmin(id) {
     try {
       const query = `DELETE FROM USERS WHERE id = ?`;
       const response = await this.db.executeQuery(query, [id]);
@@ -72,36 +70,15 @@ class UserRepository {
     }
   }
 
-  async loginUser(email, password) {
+  async loginAdmin(email, password) {
     try {
-      const query = `SELECT * FROM USERS WHERE email = ? AND password = ?`;
+      const query = `SELECT * FROM admin WHERE email = ? AND password = ?`;
       const response = await this.db.executeQuery(query, [email, password]);
       return response;
     } catch (error) {
       throw error;
     }
   }
-
-  async registerUser({ username, email, password, mobileNo, is_Admin }) {
-    try {
-      const userExists = await this.checkUserExists(username, email);
-
-      if (userExists || userExists.length > 0) {
-        throw new ApiError(HttpStatusCodes.CONFLICT, "User already exists");
-      }
-
-      const query = `INSERT INTO USERS (username, email, password,mobileNo,is_Admin) VALUES (?, ?, ?, ?, ?)`;
-      return await this.db.executeQuery(query, [
-        username,
-        email,
-        password,
-        mobileNo,
-        is_Admin,
-      ]);
-    } catch (error) {
-      throw error;
-    }
-  }
 }
 
-export { UserRepository };
+export { AdminRepository };

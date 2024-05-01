@@ -1,19 +1,22 @@
 import {
-  adminLogin,
-  fetchAllUsers,
-  updateAllUsers,
+  getAllUsersByAdmin,
+  deleteUserByAdmin,
+  getUserByAdmin,
+  loginAdmin,
+  logoutAdmin,
   updateUserByAdmin,
-} from "../../src/controllers/admin.controller.js";
+} from "../../controllers/admin.controller.js";
 import express from "express";
-import { verifyJWT } from "../../middlewares/auth.middleware.js";
-import { updatePassword } from "../../src/controllers/user.controller.js";
 
 const router = express.Router();
 
 //router.post("/registerAdmin",registerAdmin);
-router.post("/login", adminLogin);
-router.get("/fetch", fetchAllUsers);
-router.put("/updateUser/:user_id", verifyJWT, updateUserByAdmin);
-router.put("/updateAll", updateAllUsers);
+router.get("/", getAllUsersByAdmin);
+router.get("/:id", getUserByAdmin);
+router.delete("/:id", deleteUserByAdmin);
+router.put("/:id", updateUserByAdmin);
+router.post("/signin", loginAdmin);
+router.post("/logout", logoutAdmin);
+router.post("/login", loginAdmin);
 
 export default router;

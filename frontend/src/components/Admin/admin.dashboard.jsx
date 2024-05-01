@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
-const Dashboard = () => {
-  const [user, setUser] = useState(null);
+const AdminDashboard = () => {
+  const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { user_id } = useParams();
   const navigate = useNavigate();
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
         setLoading(true);
-        const { data } = await axios.get(`/api/v1/users/${user_id}`);
+        const { data } = await axios.get(`/api/v1/admin/`);
         console.log("Data: ", data);
-        setUser(data); // Update user state with fetched data
+        setAdmin(data); // Update user state with fetched data
         setLoading(false);
       } catch (error) {
         setError(error.message); // Set error message if request fails
@@ -33,21 +32,21 @@ const Dashboard = () => {
     return <p>Error fetching user details: {error}</p>;
   }
 
-  if (!user) {
+  if (!admin) {
     return <p>User not found</p>;
   }
-  const deleteUser = async () => {
+  const deleteUser = async (id) => {
     try {
-      const res = await axios.delete(`/api/v1/users/${user_id}`);
-      console.log(res);
-      setUser(res);
+      const data = await axios.delete(`/api/v1/admin/${id}`);
+      console.log(data);
+      setAdmin(data.data);
     } catch (error) {
       console.log("error: ", error);
     }
   };
-  const logoutUser = async () => {
+  const logoutAdmin = async () => {
     try {
-      const response = await axios.post(`/api/v1/users/logout`);
+      const response = await axios.post(`/api/v1/admin/logout`);
       console.log(response);
       if (response.status === 201 || response.statusText === "OK") {
         navigate("/SignIn");
@@ -59,8 +58,8 @@ const Dashboard = () => {
   };
   return (
     <div>
-      <h1 className="text-center text-3xl">Welcome: {user.username}</h1>
-      <h2>User Details</h2>
+      <h1 className="text-center text-3xl">Welcome Admin</h1>
+      <h2>Users Details</h2>
 
       <table className="text-center w-full">
         <thead>
@@ -72,18 +71,25 @@ const Dashboard = () => {
           </tr>
         </thead>
         <tbody>
-          {user.data.map((u) => (
-            <tr key={u.user_id} className="bg-slate-900 text-white">
-              <td>{u.email}</td>
+          {admin.data.map((u) => (
+            <tr key={u.id} className="bg-slate-900 text-white">
               <td>{u.username}</td>
-              <td>{u.is_Admin ? "Yes" : "No"}</td>
+              <td>{u.email}</td>
+              <td>{u.is_Admin}</td>
               <td>{u.mobileNo}</td>
+
               <td>
                 <button
                   className="bg-red-900 text-white p-2"
-                  onClick={deleteUser}
+                  onClick={() => deleteUser(u.id)}
                 >
-                  Delete {console.log(u.user_id)}
+                  Delete {console.log(u.id)}
+                </button>
+                <button
+                  className="bg-green-900 text-white p-2"
+                  onClick={() => updateUser(u.id)}
+                >
+                  Update {console.log(u.id)}
                 </button>
               </td>
             </tr>
@@ -94,7 +100,7 @@ const Dashboard = () => {
       {/* Display additional user details as needed */}
       <button
         type="button"
-        onClick={logoutUser}
+        onClick={logoutAdmin}
         className="bg-slate-800 text-white p-2 rounded m-2"
       >
         Logout
@@ -103,4 +109,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default AdminDashboard;

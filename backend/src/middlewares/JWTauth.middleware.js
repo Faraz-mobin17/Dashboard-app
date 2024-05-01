@@ -1,8 +1,8 @@
 import HttpStatusCodes from "../utils/httpStatusCodes.utils.js";
 import { ApiError } from "../utils/ApiError.utils.js";
 import AuthService from "./AuthService.middleware.js";
-import { UserService } from "../services/user.service.js";
-import { UserRepository } from "../repositories/user.repository.js";
+import { UserService } from "../services/User/user.service.js";
+import { UserRepository } from "../repositories/User/user.repository.js";
 import db from "../database/db.js";
 const userservice = new UserService(new UserRepository(db));
 const verifyJWT = async (req, res, next) => {

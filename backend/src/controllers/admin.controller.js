@@ -1,186 +1,96 @@
-import db from "../database/db.js";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import HttpStatusCodes from "../utils/httpStatusCodes.utils.js";
+import { ApiResponse } from "../utils/ApiResponse.utils.js";
+import { ApiError } from "../utils/ApiError.utils.js";
+import { asyncHandler } from "../utils/asyncHandler.utils.js";
+import AuthService from "../middlewares/AuthService.middleware.js";
+import db from "../database/db.js"; // Import your Database class instance
+import { AdminService } from "../services/Admin/admin.service.js";
+import { AdminRepository } from "../repositories/Admin/admin.repository.js";
+// import { UserService } from "../services/User/user.service.js";
+// import { UserRepository } from "../repositories/User/user.repository.js";
 
-// const adminLogin = async(req,res)=> {
-//     try {
-//         // take these values from frontend
-//         const { email,password} = req.body;
+// Modify the instantiation of UserService to use the Database instanc
+const Admin = new AdminService(new AdminRepository(db));
+// const User = new UserService(new UserRepository(db));
 
-//         // Check if the Admin already registered or not and we will check it through email
-//         const emailExistsQuery = `SELECT * FROM admin WHERE email=?`
-//         const emailExistsValue = [email];
-//         const [existingRows] = await connectDB.query(emailExistsQuery,emailExistsValue);
-
-//         if(existingRows > 0){
-//             return res.status(400).json({msg: "Admin with this email already exists",existingRows});
-//         }
-
-//         // Now bcrypt the password
-//         const hashPasssword = await bcrypt.hash(password,10);
-
-//         const query = `INSERT INTO admin (username, email, password) VALUES(?,?,?)`
-//         const values = [username,email,hashPasssword];
-//         const [row] = await connectDB.query(query,values);
-
-//         if(row.affectedRows === 0){
-//             throw new Error(400, "Error in insertion of registerAdmin");
-//         }else{
-//             return res.status(200).json({msg: "Admin registered successfully", row})
-//         }
-//     } catch (error) {
-//         console.log(error);
-//         throw new Error("Error in registerAdmin ",error);
-
-//     }
-// }
-
-const generateToken = async (adminObj) => {
-  try {
-    const payload = {
-      email: adminObj.email,
-    };
-    return jwt.sign(payload, process.env.SECRET_KEY, {
-      expiresIn: process.env.EXPIRES_IN,
-    });
-  } catch (error) {
-    console.log("error in token genertion", error);
+const getAllUsersByAdmin = asyncHandler(async (_, res) => {
+  const user = await Admin.getAllUsersByAdmin();
+  if (!user || user.length === 0) {
+    throw new ApiError(HttpStatusCodes.NOT_FOUND, "User not found");
   }
-};
+  return res
+    .status(HttpStatusCodes.OK)
+    .json(new ApiResponse(HttpStatusCodes.OK, user));
+});
 
-const adminLogin = async (req, res) => {
-  const { email, password } = req.body;
-  const connection = await db.connectDB();
-  const query = `SELECT * FROM users WHERE email = ?`;
-  const values = [email];
-
-  try {
-    const [row] = await connection.query(query, values);
-    const { is_Admin } = row[0];
-
-    if (row.length === 0) {
-      return res.status(400).json({ msg: "Email is incorrect" });
-    }
-
-    // Verify password
-    const hashPassword = row[0].password;
-    const isPasswordValid = await bcrypt.compare(password, hashPassword);
-
-    if (!isPasswordValid) {
-      return res.status(400).json({ msg: "Email or password is incorrect" });
-    }
-    const admin = row[0];
-
-    //generate token
-    const token = await generateToken(admin);
-    console.log("token", token);
-    admin.token = token;
-
-    console.log("admin after token generation", admin);
-
-    const cookieOptions = {
-      expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-      httpOnly: true,
-      secure: true,
-    };
-
-    console.log("isAdmin", is_Admin);
-    if (is_Admin === 1) {
-      return res
-        .status(200)
-        .cookie("token", token, cookieOptions)
-        .json({ msg: "Admin logged in", admin });
-      //return res.status(200).json({ msg: "Admin logged in successfully", row });
-    } else {
-      return res.status(400).json({ msg: "You do not have admin privileges" });
-    }
-  } catch (error) {
-    console.log("Error in adminLogin", error);
-    return res.status(500).json({ msg: "Internal server error" });
+const getUserByAdmin = asyncHandler(async (req, res) => {
+  const userId = Number(req.params.id) || 1;
+  const user = await Admin.getUserByAdmin(userId);
+  console.log("user controller getUser fn", user);
+  if (user.length === 0 || !user) {
+    throw new ApiError(400, "user not found");
   }
-};
+  return res
+    .status(HttpStatusCodes.OK)
+    .json(new ApiResponse(HttpStatusCodes.OK, user));
+});
 
-//============================== Fetch All users API ==================================================
-const fetchAllUsers = async (req, res) => {
-  try {
-    const query = `SELECT * FROM users`;
-    const connection = await db.connectDB();
-    const [row] = await connection.query(query);
-    // console.log("row[0]",row[0]);
-    // console.log("row",row);
-
-    if (row.length === 0) {
-      return res.status(400).json({ msg: "can not fetch" });
-    } else {
-      console.log(row);
-      return res.status(200).json({ msg: "All users are fetched", row });
-    }
-  } catch (error) {
-    console.log("error in fetching", error);
-    return res.status(500).json({ msg: "Internal server error" });
+const deleteUserByAdmin = asyncHandler(async (req, res) => {
+  const userId = Number(req.params.id);
+  const user = await Admin.deleteUserByAdmin(userId);
+  if (!user || user.length === 0) {
+    throw new ApiError(HttpStatusCodes.BAD_REQUEST, "User not delete");
   }
-};
+  return res
+    .status(HttpStatusCodes.OK)
+    .json(new ApiResponse(HttpStatusCodes.OK, "User deleted successfully"));
+});
 
-//==================================== update any user ================================================
-const updateUserByAdmin = async (req, res) => {
-  try {
-    const { is_Admin } = req.user;
-    console.log("isAdmin", is_Admin);
+const updateUserByAdmin = asyncHandler(async (req, res) => {
+  const id = Number(req.params.id) || 1;
 
-    const { user_id } = req.params;
-    const { username } = req.body;
-    const query = `update users SET username=? WHERE user_id=?`;
-    const values = [username, user_id];
-    const connection = await db.connectDB();
-    const [row] = await connection.query(query, values);
+  const result = await Admin.updateUserByAdmin(req.body, id);
 
-    if (row.length === 0) {
-      return res.status(400).json({ msg: "User not updated" });
-    } else {
-      return res
-        .status(200)
-        .json({ msg: "user updated successfully by admin", row });
-    }
-  } catch (error) {
-    return res.status(500).json({ msg: "Interval server error", error });
+  if (!result || result.length === 0) {
+    throw new ApiError(HttpStatusCodes.CONFLICT, "User not updated");
   }
-};
 
-//======================================== updateAll users Api ======================================================
+  return res
+    .status(HttpStatusCodes.OK)
+    .json(new ApiResponse(HttpStatusCodes.OK, "User updated"));
+});
 
-const updateAllUsers = async (req, res) => {
-  try {
-    const { newUsername } = req.body;
-    // Connect to the database
-    const connection = await db.connectDB();
+const logoutAdmin = asyncHandler(async (_, res) => {
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+  return res
+    .status(HttpStatusCodes.OK)
+    .clearCookie("token", options)
+    .json({ message: "User logged out", success: true });
+});
 
-    // Fetch all users from the database
-    const query = "SELECT * FROM users";
-    const [rows] = await connection.query(query);
+const loginAdmin = asyncHandler(async (req, res) => {
+  const response = await Admin.loginAdmin(req.body.email, req.body.password);
+  console.log("Inside user controller login user:", response);
+  const options = {
+    expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+    httpOnly: true,
+    secure: true,
+  };
 
-    // Loop through each user and update their username
-    for (const user of rows) {
-      const userId = user.user_id;
-      const updatedUsername = newUsername; // Set the new username here
-
-      // Update the user's username in the database
-      const updateQuery = "UPDATE users SET username = ? WHERE user_id = ?";
-      const updateValues = [updatedUsername, userId];
-      await connection.query(updateQuery, updateValues);
-
-      console.log(`Username updated for user with ID ${userId}`);
-    }
-
-    return res.status(200).json({ msg: "All usernames updated successfully" });
-  } catch (error) {
-    console.error("Error updating usernames:", error);
-  }
-};
+  return res
+    .status(HttpStatusCodes.OK)
+    .cookie("token", response, options)
+    .json(new ApiResponse(HttpStatusCodes.OK, response));
+});
 
 export {
-  //registerAdmin,
-  adminLogin,
-  fetchAllUsers,
+  getAllUsersByAdmin,
   updateUserByAdmin,
-  updateAllUsers,
+  deleteUserByAdmin,
+  loginAdmin,
+  logoutAdmin,
+  getUserByAdmin,
 };

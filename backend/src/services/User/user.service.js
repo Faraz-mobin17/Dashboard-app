@@ -1,6 +1,6 @@
-import HttpStatusCodes from "../utils/httpStatusCodes.utils.js";
-import { ApiError } from "../utils/ApiError.utils.js";
-import AuthService from "../middlewares/AuthService.middleware.js";
+import HttpStatusCodes from "../../utils/httpStatusCodes.utils.js";
+import { ApiError } from "../../utils/ApiError.utils.js";
+import AuthService from "../../middlewares/AuthService.middleware.js";
 class UserService {
   constructor(UserRepository) {
     this.UserRepository = UserRepository;
